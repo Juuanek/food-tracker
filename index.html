@@ -16,14 +16,100 @@
 
         <!-- Navigation Tabs -->
         <nav class="tabs">
-            <button class="tab-btn active" data-tab="add">Add Food</button>
+            <button class="tab-btn active" data-tab="profile">Profile</button>
+            <button class="tab-btn" data-tab="add">Add Food</button>
             <button class="tab-btn" data-tab="today">Today</button>
             <button class="tab-btn" data-tab="history">History</button>
-            <button class="tab-btn" data-tab="export">Export</button>
+            <button class="tab-btn" data-tab="export">Message for AI</button>
+            <button class="tab-btn" data-tab="backup">⚙️</button>
         </nav>
 
+        <!-- Profile Tab -->
+        <div class="tab-content active" id="profile-tab">
+            <h2>My Profile</h2>
+            <p class="section-description">Fill in your information to help AI provide personalized nutrition analysis.</p>
+            
+            <form id="profileForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userAge">Age *</label>
+                        <input type="number" id="userAge" required placeholder="e.g., 30">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userGender">Gender *</label>
+                        <select id="userGender" required>
+                            <option value="">Select...</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userHeight">Height (cm) *</label>
+                        <input type="number" id="userHeight" required placeholder="e.g., 175">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userWeight">Weight (kg) *</label>
+                        <input type="number" id="userWeight" required placeholder="e.g., 70">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="activityLevel">Activity Level *</label>
+                    <select id="activityLevel" required>
+                        <option value="">Select...</option>
+                        <option value="sedentary">Sedentary (little or no exercise)</option>
+                        <option value="light">Light (exercise 1-3 days/week)</option>
+                        <option value="moderate">Moderate (exercise 3-5 days/week)</option>
+                        <option value="active">Active (exercise 6-7 days/week)</option>
+                        <option value="veryActive">Very Active (intense exercise daily)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="userGoal">Primary Goal *</label>
+                    <select id="userGoal" required>
+                        <option value="">Select...</option>
+                        <option value="lose">Lose Weight</option>
+                        <option value="maintain">Maintain Weight</option>
+                        <option value="gain">Gain Weight</option>
+                        <option value="muscle">Build Muscle</option>
+                        <option value="health">General Health</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="userDCR">
+                        Daily Caloric Requirement (DCR)
+                        <span class="label-hint" id="calculatedDCR"></span>
+                    </label>
+                    <input type="number" id="userDCR" placeholder="Auto-calculated or enter manually">
+                    <small class="form-hint">Leave empty for AI to approximate, or enter if you know your specific DCR</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="healthConditions">Health Conditions / Allergies</label>
+                    <textarea id="healthConditions" rows="2" placeholder="e.g., Diabetes, high blood pressure, nut allergy..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="additionalNotes">Additional Notes</label>
+                    <textarea id="additionalNotes" rows="2" placeholder="Any other information relevant to your nutrition..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Profile</button>
+            </form>
+
+            <div id="profileSummary" class="profile-summary" style="display: none;"></div>
+        </div>
+
         <!-- Add Food Tab -->
-        <div class="tab-content active" id="add-tab">
+        <div class="tab-content" id="add-tab">
             <form id="foodForm">
                 <div class="form-group">
                     <label for="foodName">What did you eat? *</label>
@@ -38,6 +124,7 @@
                         <option value="Lunch">☀️ Lunch</option>
                         <option value="Dinner">🌙 Dinner</option>
                         <option value="Snack">🍪 Snack</option>
+                        <option value="Beverage">🥤 Beverage</option>
                     </select>
                 </div>
 
@@ -75,23 +162,89 @@
 
         <!-- History Tab -->
         <div class="tab-content" id="history-tab">
-            <div class="history-controls">
-                <label for="daysRange">Show last:</label>
-                <select id="daysRange">
-                    <option value="7">7 days</option>
-                    <option value="30" selected>30 days</option>
-                    <option value="60">60 days</option>
-                    <option value="90">90 days</option>
-                </select>
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" id="prevMonth">←</button>
+                <div class="calendar-title" id="calendarTitle">December 2025</div>
+                <button class="calendar-nav-btn" id="nextMonth">→</button>
+                <button class="btn-today" id="todayBtn">Today</button>
             </div>
-            <div id="historyContent"></div>
+
+            <div class="calendar-stats" id="monthStats"></div>
+
+            <div class="calendar-weekdays">
+                <div class="calendar-weekday">Mon</div>
+                <div class="calendar-weekday">Tue</div>
+                <div class="calendar-weekday">Wed</div>
+                <div class="calendar-weekday">Thu</div>
+                <div class="calendar-weekday">Fri</div>
+                <div class="calendar-weekday">Sat</div>
+                <div class="calendar-weekday">Sun</div>
+            </div>
+
+            <div class="calendar-grid" id="calendarGrid"></div>
         </div>
 
-        <!-- Export Tab -->
+        <!-- Day Details Modal -->
+        <div id="dayModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Day Details</h2>
+                    <button class="modal-close" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalStats"></div>
+                    <div id="modalEntries"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backup & Restore Tab -->
+        <div class="tab-content" id="backup-tab">
+            <h2>📦 Backup & Restore</h2>
+            <p class="section-description">Keep your data safe by creating regular backups. You can export all your data to a file and restore it anytime.</p>
+
+            <!-- Current Data Info -->
+            <div class="backup-info-section">
+                <h3>Current Data Status</h3>
+                <div id="backupInfo" class="backup-info"></div>
+            </div>
+
+            <!-- Export Backup -->
+            <div class="backup-action-section">
+                <h3>📥 Export Backup</h3>
+                <p class="backup-description">Download a complete backup of your data (profile + all entries) as a JSON file.</p>
+                <button class="btn btn-primary" id="exportBackupBtn">
+                    📥 Download Backup File
+                </button>
+                <div class="backup-tips">
+                    <strong>💡 Tips:</strong>
+                    <ul>
+                        <li>Create backups weekly or before clearing browser data</li>
+                        <li>Store backup files in cloud storage (Google Drive, Dropbox, etc.)</li>
+                        <li>Keep multiple backup versions (last 3-4 weeks)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Import Backup -->
+            <div class="backup-action-section">
+                <h3>📤 Restore from Backup</h3>
+                <p class="backup-description">Upload a previously downloaded backup file to restore your data.</p>
+                <label for="importBackupFile" class="btn btn-secondary" style="display: inline-block; margin: 0; text-align: center; cursor: pointer;">
+                    📤 Select Backup File
+                </label>
+                <input type="file" id="importBackupFile" accept=".json" style="display: none;">
+                <div class="backup-warning">
+                    <strong>⚠️ Warning:</strong> Importing a backup will replace all current data. Make sure to export your current data first if you want to keep it.
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Tab (Message for AI) -->
         <div class="tab-content" id="export-tab">
             <div class="export-section">
-                <h2>Export Your Data</h2>
-                <p>Choose a date range to export your food entries for AI analysis:</p>
+                <h2>Create message for AI</h2>
+                <p>Choose a date range to create message with your food entries for AI analysis:</p>
                 
                 <div class="form-group">
                     <label for="exportFrom">From:</label>
@@ -104,10 +257,10 @@
                 </div>
 
                 <div class="export-buttons">
-                    <button class="btn btn-secondary" id="exportTodayBtn">Export Today</button>
-                    <button class="btn btn-secondary" id="exportWeekBtn">Export This Week</button>
-                    <button class="btn btn-secondary" id="exportMonthBtn">Export This Month</button>
-                    <button class="btn btn-primary" id="exportCustomBtn">Export Custom Range</button>
+                    <button class="btn btn-secondary" id="exportTodayBtn">Message for Today</button>
+                    <button class="btn btn-secondary" id="exportWeekBtn">Message for This Week</button>
+                    <button class="btn btn-secondary" id="exportMonthBtn">Message for This Month</button>
+                    <button class="btn btn-primary" id="exportCustomBtn">Message for Custom Range</button>
                 </div>
 
                 <div id="exportOutput" class="export-output"></div>
