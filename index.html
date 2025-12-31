@@ -12,15 +12,6 @@
         <header>
             <h1>🍽️ Food Tracker</h1>
             <div class="date-display" id="currentDate"></div>
-            
-            <!-- Dark Mode Toggle -->
-            <div class="theme-toggle">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label" id="themeLabel">🌙 Dark</span>
-            </div>
         </header>
 
         <!-- Navigation Tabs -->
@@ -209,8 +200,25 @@
 
         <!-- Backup & Restore Tab -->
         <div class="tab-content" id="backup-tab">
+            <h2>⚙️ Settings</h2>
+            <p class="section-description">Manage your app preferences and data backups.</p>
+
+            <!-- Theme Settings -->
+            <div class="backup-action-section">
+                <h3>🎨 Appearance</h3>
+                <p class="backup-description">Choose your preferred theme.</p>
+                
+                <div class="theme-toggle-section">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label" id="themeLabel">🌙 Dark Mode</span>
+                </div>
+            </div>
+
             <h2>📦 Backup & Restore</h2>
-            <p class="section-description">Keep your data safe by creating regular backups. You can export all your data to a file and restore it anytime.</p>
+            <p class="section-description">Keep your data safe by creating regular backups.</p>
 
             <!-- Current Data Info -->
             <div class="backup-info-section">

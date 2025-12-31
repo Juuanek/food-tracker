@@ -422,7 +422,16 @@ class FoodTracker {
         this.cancelEdit();
         this.resetForm();
         this.updateTodayView();
-        this.renderCalendar();
+        
+        // Only re-render calendar if we're on the history tab
+        const historyTab = document.getElementById('history-tab');
+        if (historyTab && historyTab.classList.contains('active')) {
+            const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+            this.renderCalendar();
+            setTimeout(() => {
+                window.scrollTo(0, scrollPos);
+            }, 0);
+        }
     }
 
     editEntry(id) {
@@ -511,7 +520,18 @@ class FoodTracker {
             this.saveEntries();
             this.showToast('🗑️ Entry deleted');
             this.updateTodayView();
-            this.renderCalendar();
+            
+            // Only re-render calendar if we're on the history tab
+            const historyTab = document.getElementById('history-tab');
+            if (historyTab && historyTab.classList.contains('active')) {
+                // Save scroll position before re-rendering
+                const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+                this.renderCalendar();
+                // Restore scroll position after re-rendering
+                setTimeout(() => {
+                    window.scrollTo(0, scrollPos);
+                }, 0);
+            }
         }
     }
 

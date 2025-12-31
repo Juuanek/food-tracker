@@ -88,6 +88,7 @@ body {
     min-height: 100vh;
     padding: 10px;
     color: var(--text-primary);
+    overflow-anchor: none;
 }
 
 .container {
@@ -98,6 +99,12 @@ body {
     box-shadow: var(--shadow);
     overflow: hidden;
     min-height: calc(100vh - 20px);
+}
+
+/* Prevent scroll issues */
+#history-tab {
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Header */
@@ -119,16 +126,20 @@ header h1 {
 }
 
 /* Theme Toggle */
-.theme-toggle {
+.theme-toggle-section {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 15px;
+    gap: 15px;
+    padding: 15px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    margin-top: 10px;
 }
 
 .toggle-label {
-    font-size: 14px;
-    opacity: 0.9;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
 .toggle-switch {
@@ -208,6 +219,7 @@ header h1 {
     display: none;
     padding: 20px;
     animation: fadeIn 0.3s;
+    overflow-anchor: none;
 }
 
 .tab-content.active {
@@ -676,6 +688,8 @@ textarea:focus {
     justify-content: space-between;
     margin-bottom: 20px;
     gap: 10px;
+    position: relative;
+    z-index: 1;
 }
 
 .calendar-title {
