@@ -761,8 +761,13 @@ textarea:focus {
 }
 
 .calendar-stats {
-    margin-bottom: 20px;
-    display: none; /* Hidden to prevent scroll issues */
+    display: none !important; /* Hidden to prevent scroll issues */
+    margin-bottom: 0;
+}
+
+.month-stats-empty,
+.month-stats-grid {
+    display: none !important;
 }
 
 .month-stats-empty {
