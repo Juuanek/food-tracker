@@ -15,6 +15,11 @@ class FoodTracker {
         this.setDefaultDateTime();
         this.loadProfileForm();
         this.updateTodayView();
+        
+        // Prevent scroll restoration on mobile
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
     }
 
     // Local Storage

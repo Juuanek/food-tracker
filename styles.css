@@ -89,6 +89,15 @@ body {
     padding: 10px;
     color: var(--text-primary);
     overflow-anchor: none;
+    /* Prevent mobile browser UI from affecting scroll */
+    position: relative;
+}
+
+/* Fix for mobile viewport */
+@supports (height: 100dvh) {
+    body {
+        min-height: 100dvh;
+    }
 }
 
 .container {
@@ -99,6 +108,12 @@ body {
     box-shadow: var(--shadow);
     overflow: hidden;
     min-height: calc(100vh - 20px);
+    position: relative;
+}
+
+/* Prevent scroll jumping on mobile */
+.container * {
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Prevent scroll issues */
@@ -354,6 +369,17 @@ textarea:focus {
     font-size: 14px;
     width: auto;
     margin-top: 0;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
 }
 
 .btn-edit {
@@ -786,6 +812,7 @@ textarea:focus {
     gap: 5px;
     margin-bottom: 5px;
     width: 100%;
+    contain: layout;
 }
 
 .calendar-weekday {
@@ -801,6 +828,7 @@ textarea:focus {
     grid-template-columns: repeat(7, 1fr);
     gap: 5px;
     width: 100%;
+    contain: layout style;
 }
 
 .calendar-day {
