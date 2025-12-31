@@ -639,6 +639,7 @@ textarea {
     grid-template-columns: repeat(7, 1fr);
     gap: 5px;
     margin-bottom: 5px;
+    width: 100%;
 }
 
 .calendar-weekday {
@@ -653,10 +654,11 @@ textarea {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 5px;
+    width: 100%;
 }
 
 .calendar-day {
-    aspect-ratio: 1;
+    min-height: 80px;
     border: 2px solid var(--border-color);
     border-radius: 10px;
     padding: 5px;
@@ -667,6 +669,7 @@ textarea {
     cursor: default;
     transition: all 0.3s;
     background: white;
+    overflow: hidden;
 }
 
 .calendar-day.empty {
@@ -711,8 +714,8 @@ textarea {
 
 .calendar-day-number {
     font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 2px;
+    font-size: 16px;
+    margin-bottom: 4px;
     color: var(--text-primary);
 }
 
@@ -721,18 +724,20 @@ textarea {
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    font-size: 10px;
+    font-size: 11px;
+    text-align: center;
+    width: 100%;
 }
 
 .calendar-meal-count {
     color: var(--text-secondary);
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .calendar-calories {
     font-weight: 600;
     color: var(--primary-color);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 /* Modal */
@@ -962,16 +967,35 @@ textarea {
         margin-bottom: 10px;
     }
 
+    .calendar-day {
+        min-height: 70px;
+        padding: 3px;
+        border-radius: 8px;
+    }
+
+    .calendar-grid {
+        gap: 3px;
+    }
+
+    .calendar-weekdays {
+        gap: 3px;
+    }
+
     .calendar-day-info {
         font-size: 9px;
     }
 
     .calendar-day-number {
-        font-size: 12px;
+        font-size: 13px;
+        margin-bottom: 2px;
+    }
+
+    .calendar-meal-count {
+        font-size: 9px;
     }
 
     .calendar-calories {
-        font-size: 9px;
+        font-size: 10px;
     }
 
     .modal-content {
