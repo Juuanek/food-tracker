@@ -9,6 +9,7 @@ class FoodTracker {
     }
 
     init() {
+        this.initTheme();
         this.setupEventListeners();
         this.updateCurrentDate();
         this.setDefaultDateTime();
@@ -33,6 +34,36 @@ class FoodTracker {
 
     saveProfile() {
         localStorage.setItem('userProfile', JSON.stringify(this.profile));
+    }
+
+    // Theme Management
+    initTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Default to dark mode if no preference saved
+        if (savedTheme === null) {
+            document.body.classList.add('dark-mode');
+            themeToggle.checked = true;
+            this.updateThemeLabel(true);
+        } else if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeToggle.checked = true;
+            this.updateThemeLabel(true);
+        } else {
+            this.updateThemeLabel(false);
+        }
+    }
+
+    toggleTheme() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        this.updateThemeLabel(isDark);
+    }
+
+    updateThemeLabel(isDark) {
+        const label = document.getElementById('themeLabel');
+        label.textContent = isDark ? '🌙 Dark' : '☀️ Light';
     }
 
     // Event Listeners
@@ -76,6 +107,9 @@ class FoodTracker {
         // Backup/Restore
         document.getElementById('exportBackupBtn').addEventListener('click', () => this.exportBackup());
         document.getElementById('importBackupFile').addEventListener('change', (e) => this.importBackup(e));
+
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('change', () => this.toggleTheme());
 
         // Export buttons
         document.getElementById('exportTodayBtn').addEventListener('click', () => this.exportToday());
@@ -862,8 +896,14 @@ class FoodTracker {
         }
 
         // Add AI instructions
+        const selectedLanguage = document.getElementById('aiLanguage').value;
+        const languageInstruction = selectedLanguage === 'polish' 
+            ? 'IMPORTANT: Please respond in POLISH language.'
+            : 'Please respond in English.';
+
         exportText += `ANALYSIS INSTRUCTIONS FOR AI:\n`;
         exportText += `${'-'.repeat(60)}\n`;
+        exportText += `${languageInstruction}\n\n`;
         exportText += `Please analyze this nutrition data and provide:\n`;
         exportText += `1. Compare total calories eaten vs DCR for each day and overall period\n`;
         exportText += `2. Assess nutritional balance and meal distribution\n`;

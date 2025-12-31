@@ -9,6 +9,7 @@
     --primary-dark: #45a049;
     --secondary-color: #2196F3;
     --danger-color: #f44336;
+    --warning-color: #FF9800;
     --text-primary: #333;
     --text-secondary: #666;
     --bg-primary: #ffffff;
@@ -16,6 +17,69 @@
     --border-color: #ddd;
     --shadow: 0 2px 8px rgba(0,0,0,0.1);
     --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Dark Mode */
+body.dark-mode {
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #2a2a2a;
+    --border-color: #404040;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+body.dark-mode {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+}
+
+body.dark-mode .calendar-day {
+    background: var(--bg-secondary);
+}
+
+body.dark-mode .calendar-day.empty {
+    background: transparent;
+}
+
+body.dark-mode .modal-content {
+    background: var(--bg-primary);
+}
+
+body.dark-mode .backup-stats,
+body.dark-mode .summary-grid div,
+body.dark-mode .stat-item {
+    background: var(--bg-secondary);
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .entry-card,
+body.dark-mode .calendar-day.has-entries {
+    background: var(--bg-secondary);
+}
+
+body.dark-mode .toast {
+    background: #424242;
+}
+
+body.dark-mode .tabs {
+    background: var(--bg-primary);
+}
+
+body.dark-mode .tab-btn.active {
+    background: var(--bg-secondary);
+    color: var(--primary-color);
+}
+
+body.dark-mode .tab-btn {
+    color: var(--text-secondary);
 }
 
 body {
@@ -52,6 +116,64 @@ header h1 {
 .date-display {
     font-size: 14px;
     opacity: 0.9;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.toggle-label {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: 0.3s;
+    border-radius: 26px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
 }
 
 /* Navigation Tabs */
@@ -156,16 +278,26 @@ textarea {
     font-family: inherit;
 }
 
+/* Larger textarea for food name */
+#foodName {
+    padding: 15px;
+    font-size: 18px;
+    font-weight: 500;
+    min-height: 60px;
+    resize: vertical;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-textarea {
-    resize: vertical;
 }
 
 /* Buttons */
