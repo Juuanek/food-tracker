@@ -101,7 +101,6 @@ class FoodTracker {
         // Calendar navigation
         document.getElementById('prevMonth').addEventListener('click', () => this.previousMonth());
         document.getElementById('nextMonth').addEventListener('click', () => this.nextMonth());
-        document.getElementById('todayBtn').addEventListener('click', () => this.goToToday());
 
         // Modal close
         document.getElementById('closeModal').addEventListener('click', () => this.closeModal());

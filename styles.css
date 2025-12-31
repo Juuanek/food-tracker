@@ -743,23 +743,6 @@ textarea:focus {
     transform: scale(1.05);
 }
 
-.btn-today {
-    background: var(--secondary-color);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 15px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.btn-today:hover {
-    background: #1976D2;
-    transform: translateY(-2px);
-}
-
 .calendar-stats {
     display: none !important; /* Hidden to prevent scroll issues */
     margin-bottom: 0;
@@ -1138,13 +1121,20 @@ textarea:focus {
     }
 
     .calendar-header {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        gap: 5px;
     }
 
     .calendar-title {
-        flex: 1 1 100%;
-        order: -1;
-        margin-bottom: 10px;
+        flex: 1;
+        font-size: 18px;
+    }
+
+    .calendar-nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+        flex-shrink: 0;
     }
 
     .calendar-day {
