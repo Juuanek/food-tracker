@@ -762,6 +762,7 @@ textarea:focus {
 
 .calendar-stats {
     margin-bottom: 20px;
+    display: none; /* Hidden to prevent scroll issues */
 }
 
 .month-stats-empty {

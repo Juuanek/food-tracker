@@ -654,8 +654,8 @@ class FoodTracker {
         let firstDayOfWeek = firstDay.getDay();
         firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Convert to Mon=0
 
-        // Calculate month stats
-        this.renderMonthStats(year, month);
+        // Calculate month stats - Disabled to prevent scroll issues
+        // this.renderMonthStats(year, month);
 
         // Create calendar grid
         const grid = document.getElementById('calendarGrid');
