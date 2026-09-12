@@ -3,8 +3,11 @@ class FoodTracker {
     constructor() {
         this.entries = this.loadEntries();
         this.profile = this.loadProfile();
+        this.calorieOverrides = this.loadCalorieOverrides();
+        this.dailyActivity = this.loadDailyActivity();
         this.editingId = null; // Track which entry is being edited
         this.currentCalendarDate = new Date(); // Track current calendar month
+        this.currentModalDate = null;
         this.init();
     }
 
@@ -39,6 +42,67 @@ class FoodTracker {
 
     saveProfile() {
         localStorage.setItem('userProfile', JSON.stringify(this.profile));
+    }
+
+    loadCalorieOverrides() {
+        const data = localStorage.getItem('dailyCalorieOverrides');
+        return data ? JSON.parse(data) : {};
+    }
+
+    saveCalorieOverrides() {
+        localStorage.setItem('dailyCalorieOverrides', JSON.stringify(this.calorieOverrides));
+    }
+
+    getCalorieOverride(dateStr) {
+        const value = this.calorieOverrides[dateStr];
+        return value === undefined || value === null ? null : value;
+    }
+
+    getDayCalories(dateStr, entries) {
+        const override = this.getCalorieOverride(dateStr);
+        if (override !== null) return override;
+        const dayEntries = entries || this.entries.filter(e => e.time.startsWith(dateStr));
+        return dayEntries.reduce((sum, e) => sum + (parseInt(e.calories) || 0), 0);
+    }
+
+    setCalorieOverride(dateStr, rawValue) {
+        const trimmed = String(rawValue ?? '').trim();
+        if (trimmed === '') {
+            delete this.calorieOverrides[dateStr];
+            this.saveCalorieOverrides();
+            return true;
+        }
+
+        const parsed = parseInt(trimmed, 10);
+        if (Number.isNaN(parsed) || parsed < 0) return false;
+
+        this.calorieOverrides[dateStr] = parsed;
+        this.saveCalorieOverrides();
+        return true;
+    }
+
+    clearCalorieOverride(dateStr) {
+        delete this.calorieOverrides[dateStr];
+        this.saveCalorieOverrides();
+    }
+
+    loadDailyActivity() {
+        const data = localStorage.getItem('dailyActivity');
+        return data ? JSON.parse(data) : {};
+    }
+
+    saveDailyActivity() {
+        localStorage.setItem('dailyActivity', JSON.stringify(this.dailyActivity));
+    }
+
+    getDayActivity(dateStr) {
+        return this.dailyActivity[dateStr] || { type: 'none', difficulty: 'easy' };
+    }
+
+    setDayActivity(dateStr, field, value) {
+        const current = this.getDayActivity(dateStr);
+        this.dailyActivity[dateStr] = { ...current, [field]: value };
+        this.saveDailyActivity();
     }
 
     // Theme Management
@@ -308,6 +372,8 @@ class FoodTracker {
             exportDate: new Date().toISOString(),
             profile: this.profile,
             entries: this.entries,
+            calorieOverrides: this.calorieOverrides,
+            dailyActivity: this.dailyActivity,
             stats: {
                 totalEntries: this.entries.length,
                 hasProfile: !!this.profile
@@ -357,10 +423,14 @@ class FoodTracker {
                 // Restore data
                 this.entries = backupData.entries || [];
                 this.profile = backupData.profile || null;
+                this.calorieOverrides = backupData.calorieOverrides || {};
+                this.dailyActivity = backupData.dailyActivity || {};
 
                 // Save to localStorage
                 this.saveEntries();
                 this.saveProfile();
+                this.saveCalorieOverrides();
+                this.saveDailyActivity();
 
                 // Update UI
                 this.loadProfileForm();
@@ -546,13 +616,16 @@ class FoodTracker {
             entry.time.startsWith(today)
         );
 
-        this.displayStats(todayEntries, 'todayStats');
+        this.displayStats(todayEntries, 'todayStats', { dateStr: today });
         this.displayEntries(todayEntries, 'todayEntries');
     }
 
-    displayStats(entries, containerId) {
+    displayStats(entries, containerId, options = {}) {
         const container = document.getElementById(containerId);
-        const totalCalories = entries.reduce((sum, e) => sum + (parseInt(e.calories) || 0), 0);
+        const { dateStr = null, editableCalories = false, title = "Today's Summary", showActivity = false } = options;
+        const calculatedCalories = entries.reduce((sum, e) => sum + (parseInt(e.calories) || 0), 0);
+        const hasOverride = dateStr ? this.getCalorieOverride(dateStr) !== null : false;
+        const totalCalories = dateStr ? this.getDayCalories(dateStr, entries) : calculatedCalories;
         const totalSize = entries.reduce((sum, e) => sum + (parseInt(e.size) || 0), 0);
 
         const mealCounts = entries.reduce((acc, e) => {
@@ -560,15 +633,39 @@ class FoodTracker {
             return acc;
         }, {});
 
+        const caloriesDisplay = editableCalories && dateStr
+            ? `<input type="number" min="0" step="1" class="stat-calories-input" id="dayCaloriesInput" value="${totalCalories || ''}" placeholder="0" inputmode="numeric">
+               <div class="stat-calories-hint">
+                   ${hasOverride ? 'Manual total (meal sum ignored)' : 'From meals — tap to override'}
+                   ${hasOverride ? '<button type="button" class="stat-reset-btn" id="resetDayCalories">Use meal total</button>' : ''}
+               </div>`
+            : `<div class="stat-value">${totalCalories || '—'}</div>`;
+
+        const activity = showActivity && dateStr ? this.getDayActivity(dateStr) : null;
+        const activityTile = activity ? `
+                <div class="stat-item activity-tile">
+                    <div class="stat-label">Activity</div>
+                    <select class="activity-select" id="dayActivityType">
+                        <option value="none"${activity.type === 'none' ? ' selected' : ''}>no activity</option>
+                        <option value="short"${activity.type === 'short' ? ' selected' : ''}>short activity</option>
+                        <option value="long"${activity.type === 'long' ? ' selected' : ''}>long activity</option>
+                    </select>
+                    <select class="activity-select" id="dayActivityDifficulty"${activity.type === 'none' ? ' disabled' : ''}>
+                        <option value="easy"${activity.difficulty === 'easy' ? ' selected' : ''}>easy</option>
+                        <option value="medium"${activity.difficulty === 'medium' ? ' selected' : ''}>medium</option>
+                        <option value="hard"${activity.difficulty === 'hard' ? ' selected' : ''}>hard</option>
+                    </select>
+                </div>` : '';
+
         container.innerHTML = `
-            <h2>Today's Summary</h2>
+            <h2>${title}</h2>
             <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-value">${entries.length}</div>
                     <div class="stat-label">Total Entries</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">${totalCalories || '—'}</div>
+                    ${caloriesDisplay}
                     <div class="stat-label">Total Calories</div>
                 </div>
                 <div class="stat-item">
@@ -579,18 +676,103 @@ class FoodTracker {
                     <div class="stat-value">${Object.keys(mealCounts).length}</div>
                     <div class="stat-label">Meal Types</div>
                 </div>
+                ${activityTile}
             </div>
         `;
+
+        if (editableCalories && dateStr) {
+            this.bindDayCaloriesEditor(dateStr, calculatedCalories);
+        }
+        if (activity) {
+            this.bindDayActivityEditor(dateStr);
+        }
     }
 
-    displayEntries(entries, containerId) {
+    bindDayCaloriesEditor(dateStr, calculatedCalories) {
+        const input = document.getElementById('dayCaloriesInput');
+        const resetBtn = document.getElementById('resetDayCalories');
+        if (!input) return;
+
+        const commit = () => {
+            const previousOverride = this.getCalorieOverride(dateStr);
+            const trimmed = input.value.trim();
+
+            if (trimmed === '') {
+                if (previousOverride === null) return;
+                this.clearCalorieOverride(dateStr);
+                this.showToast('🔄 Using meal total again');
+                this.refreshAfterCalorieEdit(dateStr);
+                return;
+            }
+
+            const parsed = parseInt(trimmed, 10);
+            if (Number.isNaN(parsed) || parsed < 0) {
+                input.value = previousOverride !== null ? previousOverride : (calculatedCalories || '');
+                this.showToast('❌ Enter a valid calorie amount');
+                return;
+            }
+
+            if (previousOverride === parsed) return;
+            if (previousOverride === null && parsed === calculatedCalories) return;
+
+            this.setCalorieOverride(dateStr, parsed);
+            this.showToast('🔥 Daily calories saved');
+            this.refreshAfterCalorieEdit(dateStr);
+        };
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            }
+        });
+        input.addEventListener('blur', commit);
+
+        if (resetBtn) {
+            resetBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this.clearCalorieOverride(dateStr);
+                this.showToast('🔄 Using meal total again');
+                this.refreshAfterCalorieEdit(dateStr);
+            });
+        }
+    }
+
+    bindDayActivityEditor(dateStr) {
+        const typeSelect = document.getElementById('dayActivityType');
+        const difficultySelect = document.getElementById('dayActivityDifficulty');
+        if (!typeSelect || !difficultySelect) return;
+
+        typeSelect.addEventListener('change', () => {
+            this.setDayActivity(dateStr, 'type', typeSelect.value);
+            difficultySelect.disabled = typeSelect.value === 'none';
+        });
+        difficultySelect.addEventListener('change', () => {
+            this.setDayActivity(dateStr, 'difficulty', difficultySelect.value);
+        });
+    }
+
+    refreshAfterCalorieEdit(dateStr) {
+        const scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+        this.updateTodayView();
+        this.renderCalendar();
+        if (this.currentModalDate === dateStr) {
+            this.openDayModal(dateStr);
+        }
+        setTimeout(() => {
+            window.scrollTo(0, scrollPos);
+        }, 0);
+    }
+
+    displayEntries(entries, containerId, options = {}) {
         const container = document.getElementById(containerId);
+        const emptyMessage = options.emptyMessage || 'No entries for today yet. Start tracking your meals!';
 
         if (entries.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">🍽️</div>
-                    <div class="empty-state-text">No entries for today yet. Start tracking your meals!</div>
+                    <div class="empty-state-text">${emptyMessage}</div>
                 </div>
             `;
             return;
@@ -657,6 +839,8 @@ class FoodTracker {
         // this.renderMonthStats(year, month);
 
         // Create calendar grid
+        const dcr = this.profile?.dcr ? parseInt(this.profile.dcr, 10) : null;
+
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
 
@@ -671,9 +855,12 @@ class FoodTracker {
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayEntries = this.entries.filter(e => e.time.startsWith(dateStr));
+            const totalCalories = this.getDayCalories(dateStr, dayEntries);
+            const hasOverride = this.getCalorieOverride(dateStr) !== null;
+            const hasData = dayEntries.length > 0 || hasOverride;
             
             const dayCell = document.createElement('div');
-            dayCell.className = 'calendar-day';
+            dayCell.className = 'calendar-day clickable';
             
             // Check if it's today
             const today = new Date();
@@ -681,45 +868,32 @@ class FoodTracker {
                 dayCell.classList.add('today');
             }
 
-            // Color code based on entries and DCR
-            if (dayEntries.length > 0) {
+            if (hasData) {
                 dayCell.classList.add('has-entries');
-                const totalCalories = dayEntries.reduce((sum, e) => sum + (parseInt(e.calories) || 0), 0);
-                
-                if (totalCalories > 0 && this.profile) {
-                    const dcr = this.profile.dcr || this.calculateTDEE(
-                        this.calculateBMR(this.profile.age, this.profile.gender, this.profile.height, this.profile.weight),
-                        this.profile.activityLevel
-                    );
-                    const diff = Math.abs(totalCalories - dcr);
-                    const percentDiff = (diff / dcr) * 100;
 
-                    if (percentDiff <= 10) {
-                        dayCell.classList.add('good'); // Within 10% of DCR
-                    } else if (percentDiff > 20) {
-                        dayCell.classList.add('bad'); // More than 20% off
-                    } else {
-                        dayCell.classList.add('warning'); // Between 10-20%
-                    }
-                } else if (totalCalories === 0 && dayEntries.length > 0) {
-                    dayCell.classList.add('no-calories'); // Entries but no calorie data
+                if (totalCalories < 1000) {
+                    dayCell.classList.add('no-calories');
+                } else if (dcr) {
+                    if (totalCalories > dcr) dayCell.classList.add('bad');
+                    else if (totalCalories < dcr) dayCell.classList.add('good');
                 }
 
-                // Create day content
+                const mealLabel = dayEntries.length === 0
+                    ? 'no meals'
+                    : `${dayEntries.length} meal${dayEntries.length > 1 ? 's' : ''}`;
+
                 dayCell.innerHTML = `
                     <div class="calendar-day-number">${day}</div>
                     <div class="calendar-day-info">
-                        <div class="calendar-meal-count">${dayEntries.length} meal${dayEntries.length > 1 ? 's' : ''}</div>
-                        ${totalCalories > 0 ? `<div class="calendar-calories">${totalCalories} kcal</div>` : ''}
+                        <div class="calendar-meal-count">${mealLabel}</div>
+                        ${totalCalories > 0 || hasOverride ? `<div class="calendar-calories">${totalCalories} kcal</div>` : ''}
                     </div>
                 `;
-
-                dayCell.onclick = () => this.openDayModal(dateStr);
             } else {
-                // No entries
                 dayCell.innerHTML = `<div class="calendar-day-number">${day}</div>`;
             }
 
+            dayCell.onclick = () => this.openDayModal(dateStr);
             grid.appendChild(dayCell);
         }
     }
@@ -749,7 +923,10 @@ class FoodTracker {
         }, {});
 
         const daysWithEntries = Object.keys(daysByDate).length;
-        const totalCalories = monthEntries.reduce((sum, e) => sum + (parseInt(e.calories) || 0), 0);
+        const totalCalories = Object.keys(daysByDate).reduce(
+            (sum, date) => sum + this.getDayCalories(date, daysByDate[date]),
+            0
+        );
         const avgCalories = Math.round(totalCalories / daysWithEntries);
 
         let dcrInfo = '';
@@ -801,8 +978,7 @@ class FoodTracker {
 
     openDayModal(dateStr) {
         const dayEntries = this.entries.filter(e => e.time.startsWith(dateStr));
-        
-        if (dayEntries.length === 0) return;
+        this.currentModalDate = dateStr;
 
         // Format date for modal title
         const date = new Date(dateStr + 'T00:00:00');
@@ -815,17 +991,22 @@ class FoodTracker {
 
         document.getElementById('modalTitle').textContent = dateFormatted;
 
-        // Display stats
-        this.displayStats(dayEntries, 'modalStats');
+        this.displayStats(dayEntries, 'modalStats', {
+            dateStr,
+            editableCalories: true,
+            showActivity: true,
+            title: 'Day Summary'
+        });
 
-        // Display entries
-        this.displayEntries(dayEntries, 'modalEntries');
+        this.displayEntries(dayEntries, 'modalEntries', {
+            emptyMessage: 'No meals logged. You can still set a total calorie amount above.'
+        });
 
-        // Show modal
         document.getElementById('dayModal').classList.add('show');
     }
 
     closeModal() {
+        this.currentModalDate = null;
         document.getElementById('dayModal').classList.remove('show');
     }
 
@@ -981,11 +1162,14 @@ class FoodTracker {
             });
 
             // Daily summary
-            const dayCalories = groupedByDate[date].reduce((sum, e) => sum + (parseInt(e.calories) || 0), 0);
+            const dayCalories = this.getDayCalories(date, groupedByDate[date]);
             const daySize = groupedByDate[date].reduce((sum, e) => sum + (parseInt(e.size) || 0), 0);
             exportText += `   Daily Total: ${groupedByDate[date].length} entries`;
-            if (dayCalories > 0) {
+            if (dayCalories > 0 || this.getCalorieOverride(date) !== null) {
                 exportText += `, ${dayCalories} calories`;
+                if (this.getCalorieOverride(date) !== null) {
+                    exportText += ' (manual daily total)';
+                }
                 if (this.profile) {
                     const dcr = this.profile.dcr || this.calculateTDEE(
                         this.calculateBMR(this.profile.age, this.profile.gender, this.profile.height, this.profile.weight),
@@ -1000,7 +1184,10 @@ class FoodTracker {
         });
 
         // Overall summary
-        const totalCalories = sortedEntries.reduce((sum, e) => sum + (parseInt(e.calories) || 0), 0);
+        const totalCalories = Object.keys(groupedByDate).reduce(
+            (sum, date) => sum + this.getDayCalories(date, groupedByDate[date]),
+            0
+        );
         const totalSize = sortedEntries.reduce((sum, e) => sum + (parseInt(e.size) || 0), 0);
         const avgCaloriesPerDay = Math.round(totalCalories / Object.keys(groupedByDate).length);
         

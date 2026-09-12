@@ -623,6 +623,83 @@ textarea:focus {
     margin-bottom: 5px;
 }
 
+.stat-calories-input {
+    width: 100%;
+    max-width: 130px;
+    margin: 0 auto 4px;
+    display: block;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px dashed rgba(255, 255, 255, 0.75);
+    color: inherit;
+    border-radius: 8px;
+    padding: 2px 6px;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.stat-calories-input::-webkit-outer-spin-button,
+.stat-calories-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.stat-calories-input:focus {
+    border-style: solid;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.stat-calories-hint {
+    font-size: 10px;
+    line-height: 1.3;
+    opacity: 0.9;
+    margin-bottom: 6px;
+}
+
+.stat-reset-btn {
+    display: block;
+    margin: 4px auto 0;
+    background: none;
+    border: none;
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 0;
+}
+
+#modalStats .stat-calories-input {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+#modalStats .stat-calories-hint,
+#modalStats .stat-reset-btn {
+    color: var(--text-secondary);
+}
+
+.activity-tile {
+    grid-column: 1 / -1;
+}
+
+.activity-select {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.activity-select:disabled {
+    opacity: 0.5;
+}
+
 .stat-label {
     font-size: 12px;
     opacity: 0.9;
@@ -845,7 +922,12 @@ textarea:focus {
     border-width: 2px;
 }
 
-.calendar-day.has-entries:hover {
+.calendar-day.clickable {
+    cursor: pointer;
+}
+
+.calendar-day.has-entries:hover,
+.calendar-day.clickable:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
 }
