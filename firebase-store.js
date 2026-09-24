@@ -1,12 +1,6 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
-import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
-import { firebaseConfig, isFirebaseConfigured } from './firebase-config.js';
+import { doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
+import { isFirebaseConfigured } from './firebase-config.js';
+import { getDb } from './firebase-core.js';
 import { mergeAppData } from './data-merge.js';
 
 const CLIENT_ID_KEY = 'foodTrackerClientId';
@@ -19,6 +13,25 @@ const LOCAL_KEYS = {
     calorieOverrides: 'dailyCalorieOverrides',
     dailyActivity: 'dailyActivity'
 };
+
+function emptyAppData() {
+    return {
+        entries: [],
+        profile: null,
+        calorieOverrides: {},
+        dailyActivity: {}
+    };
+}
+
+function normalizeClientData(data) {
+    if (!data) return emptyAppData();
+    return {
+        entries: data.entries || [],
+        profile: data.profile ?? null,
+        calorieOverrides: data.calorieOverrides || {},
+        dailyActivity: data.dailyActivity || {}
+    };
+}
 
 function createClientId() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -84,18 +97,22 @@ export function markMigratedFromLocalStorage() {
     localStorage.setItem(MIGRATED_KEY, '1');
 }
 
-export async function createDataStore() {
+export async function createDataStore(uid, email = '') {
     if (!isFirebaseConfigured()) {
         throw new Error('Firebase is not configured. Copy firebase-config.example.js to firebase-config.js and add your project keys.');
     }
+    if (!uid) {
+        throw new Error('Brak zalogowanego użytkownika.');
+    }
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const clientId = getClientId();
-    const docRef = doc(db, 'clients', clientId);
+    const db = getDb();
+    const docRef = doc(db, 'clients', uid);
+    const deviceId = getClientId();
 
     return {
-        clientId,
+        uid,
+        email,
+        deviceId,
         dbKind: 'firestore',
 
         async load() {
@@ -117,26 +134,43 @@ export async function createDataStore() {
             );
         },
 
+        async claimLegacyDeviceBucket() {
+            if (deviceId === uid) return;
+
+            const deviceRef = doc(db, 'clients', deviceId);
+            const deviceSnap = await getDoc(deviceRef);
+            if (!deviceSnap.exists()) return;
+
+            const deviceRaw = deviceSnap.data();
+            const claimedBy = deviceRaw.claimedBy;
+            if (claimedBy && claimedBy !== uid) return;
+
+            const userSnap = await getDoc(docRef);
+            const userNorm = normalizeClientData(userSnap.exists() ? userSnap.data() : null);
+            const deviceNorm = normalizeClientData(deviceRaw);
+            const local = readLegacyLocalStorage();
+            let merged = mergeAppData(local || emptyAppData(), userNorm);
+            merged = mergeAppData(deviceNorm, merged);
+
+            await this.save(merged);
+
+            if (!claimedBy) {
+                await setDoc(deviceRef, { claimedBy: uid }, { merge: true });
+            }
+
+            markMigratedFromLocalStorage();
+            localStorage.setItem(LEGACY_MERGED_KEY, '1');
+        },
+
         async loadWithMigration() {
+            await this.claimLegacyDeviceBucket();
+
             let remote = await this.load();
             const legacy = readLegacyLocalStorage();
             const legacyMerged = localStorage.getItem(LEGACY_MERGED_KEY) === '1';
 
             if (legacy && !legacyMerged) {
-                const remoteNorm = remote
-                    ? {
-                          entries: remote.entries || [],
-                          profile: remote.profile ?? null,
-                          calorieOverrides: remote.calorieOverrides || {},
-                          dailyActivity: remote.dailyActivity || {}
-                      }
-                    : {
-                          entries: [],
-                          profile: null,
-                          calorieOverrides: {},
-                          dailyActivity: {}
-                      };
-
+                const remoteNorm = normalizeClientData(remote);
                 const merged = isRemoteEmpty(remote)
                     ? {
                           entries: legacy.entries,
@@ -153,20 +187,10 @@ export async function createDataStore() {
             }
 
             if (!remote) {
-                return {
-                    entries: [],
-                    profile: null,
-                    calorieOverrides: {},
-                    dailyActivity: {}
-                };
+                return emptyAppData();
             }
 
-            return {
-                entries: remote.entries || [],
-                profile: remote.profile ?? null,
-                calorieOverrides: remote.calorieOverrides || {},
-                dailyActivity: remote.dailyActivity || {}
-            };
+            return normalizeClientData(remote);
         }
     };
 }

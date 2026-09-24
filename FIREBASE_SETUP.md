@@ -43,7 +43,9 @@ Plik `firebase-config.js` jest w `.gitignore` — nie trafi do gita.
 
 Bez logowania każde urządzenie ma losowy **Cloud ID** w `localStorage`. To **nie jest** pełne bezpieczeństwo — kto zna ID, może teoretycznie odczytać dokument. Na produkcję z wieloma klientami dodamy **Firebase Authentication** w kolejnej iteracji.
 
-Na teraz ustaw reguły tak, aby aplikacja mogła zapisywać dane (w **Firestore** → **Rules**):
+> **Masz logowanie e-mail/hasło?** Użyj reguł z **[FIREBASE_AUTH.md](./FIREBASE_AUTH.md)** zamiast poniższych.
+
+Na etapie bez logowania ustaw reguły tak (w **Firestore** → **Rules**):
 
 ```text
 rules_version = '2';

@@ -1,11 +1,9 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
-import { firebaseConfig, isFirebaseConfigured } from './firebase-config.js';
-import { getClientId, readLegacyLocalStorage } from './firebase-store.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
+import { doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
+import { isFirebaseConfigured } from './firebase-config.js';
+import { getDb, getFirebaseAuth } from './firebase-core.js';
+import { readLegacyLocalStorage } from './firebase-store.js';
 import { mergeAppData, summarizeAppData } from './data-merge.js';
-
-const CLIENT_ID_KEY = 'foodTrackerClientId';
-const LEGACY_MERGED_KEY = 'foodTrackerLegacyMerged';
 
 const logEl = document.getElementById('log');
 const clientIdEl = document.getElementById('clientId');
@@ -36,6 +34,7 @@ function localFromBackup(backup) {
 }
 
 let pendingLocal = null;
+let currentUid = null;
 
 async function readLocalSource() {
     if (pendingLocal) return pendingLocal;
@@ -44,18 +43,10 @@ async function readLocalSource() {
     return { entries: [], profile: null, calorieOverrides: {}, dailyActivity: {} };
 }
 
-async function readRemote(db, clientId) {
-    const ref = doc(db, 'clients', clientId);
+async function readRemote(uid) {
+    const ref = doc(getDb(), 'clients', uid);
     const snap = await getDoc(ref);
     return normalizeRemote(snap.exists() ? snap.data() : null);
-}
-
-async function getDb() {
-    if (!isFirebaseConfigured()) {
-        throw new Error('Uzupełnij firebase-config.js');
-    }
-    const app = initializeApp(firebaseConfig);
-    return getFirestore(app);
 }
 
 document.getElementById('backupFile').addEventListener('change', async (e) => {
@@ -72,15 +63,14 @@ document.getElementById('backupFile').addEventListener('change', async (e) => {
 
 document.getElementById('btnPreview').addEventListener('click', async () => {
     try {
-        const clientId = getClientId();
-        clientIdEl.textContent = clientId;
-        const db = await getDb();
+        if (!currentUid) throw new Error('Zaloguj się w głównej aplikacji, potem wróć tutaj.');
+        clientIdEl.textContent = currentUid;
         const local = await readLocalSource();
-        const remote = await readRemote(db, clientId);
+        const remote = await readRemote(currentUid);
         const merged = mergeAppData(local, remote);
         log(
-            `LOCAL:  ${JSON.stringify(summarizeAppData(local))}\n` +
-                `REMOTE: ${JSON.stringify(summarizeAppData(remote))}\n` +
+            `LOCAL/BACKUP: ${JSON.stringify(summarizeAppData(local))}\n` +
+                `REMOTE (konto): ${JSON.stringify(summarizeAppData(remote))}\n` +
                 `MERGED: ${JSON.stringify(summarizeAppData(merged))}\n\n` +
                 `Po scaleniu będzie ${merged.entries.length} wpisów.`
         );
@@ -91,15 +81,14 @@ document.getElementById('btnPreview').addEventListener('click', async () => {
 
 document.getElementById('btnMerge').addEventListener('click', async () => {
     try {
-        const clientId = getClientId();
-        clientIdEl.textContent = clientId;
-        const db = await getDb();
+        if (!currentUid) throw new Error('Zaloguj się w głównej aplikacji, potem wróć tutaj.');
+        clientIdEl.textContent = currentUid;
         const local = await readLocalSource();
-        const remote = await readRemote(db, clientId);
+        const remote = await readRemote(currentUid);
         const merged = mergeAppData(local, remote);
 
         await setDoc(
-            doc(db, 'clients', clientId),
+            doc(getDb(), 'clients', currentUid),
             {
                 entries: merged.entries,
                 profile: merged.profile,
@@ -110,11 +99,11 @@ document.getElementById('btnMerge').addEventListener('click', async () => {
             { merge: true }
         );
 
-        localStorage.setItem(LEGACY_MERGED_KEY, '1');
+        localStorage.setItem('foodTrackerLegacyMerged', '1');
         localStorage.setItem('foodTrackerMigratedToFirebase', '1');
 
         log(
-            `✅ Zapisano w Firestore (clients/${clientId}).\n` +
+            `✅ Zapisano w Firestore (clients/${currentUid}).\n` +
                 `Wynik: ${JSON.stringify(summarizeAppData(merged))}\n\n` +
                 `Odśwież główną aplikację (index.html).`
         );
@@ -123,4 +112,18 @@ document.getElementById('btnMerge').addEventListener('click', async () => {
     }
 });
 
-clientIdEl.textContent = localStorage.getItem(CLIENT_ID_KEY) || '(brak — otwórz najpierw główną aplikację)';
+if (!isFirebaseConfigured()) {
+    log('Uzupełnij firebase-config.js');
+} else {
+    onAuthStateChanged(getFirebaseAuth(), (user) => {
+        if (!user) {
+            currentUid = null;
+            clientIdEl.textContent = '(zaloguj się na index.html)';
+            log('Nie jesteś zalogowany. Otwórz główną aplikację, zaloguj się, wróć tutaj.');
+            return;
+        }
+        currentUid = user.uid;
+        clientIdEl.textContent = `${user.email || user.uid}`;
+        log('Zalogowano. Możesz użyć podglądu / scalenia.');
+    });
+}

@@ -12,10 +12,40 @@
             <p>Ładowanie danych z chmury…</p>
         </div>
     </div>
-    <div class="container">
+
+    <div id="authGate" class="auth-gate hidden">
+        <div class="auth-card">
+            <h1>🍽️ Food Tracker</h1>
+            <p class="auth-lead">Zaloguj się, aby synchronizować posiłki między komputerem i telefonem.</p>
+            <form id="authForm" class="auth-form">
+                <div class="form-group">
+                    <label for="authEmail">E-mail</label>
+                    <input type="email" id="authEmail" required autocomplete="email" placeholder="ty@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">Hasło</label>
+                    <input type="password" id="authPassword" required minlength="6" autocomplete="current-password" placeholder="min. 6 znaków">
+                </div>
+                <div class="auth-actions">
+                    <button type="submit" class="btn btn-primary" id="authLoginBtn">Zaloguj</button>
+                    <button type="button" class="btn btn-secondary" id="authRegisterBtn">Załóż konto</button>
+                </div>
+            </form>
+            <button type="button" class="auth-link-btn" id="authResetBtn">Zapomniałem hasła</button>
+            <p id="authError" class="auth-error" aria-live="polite"></p>
+        </div>
+    </div>
+
+    <div class="container hidden" id="appContainer">
         <!-- Header -->
         <header>
-            <h1>🍽️ Food Tracker</h1>
+            <div class="header-top">
+                <h1>🍽️ Food Tracker</h1>
+                <div id="authUserBar" class="auth-user-bar hidden">
+                    <span id="authUserEmail" class="auth-user-email"></span>
+                    <button type="button" class="btn btn-secondary btn-sm" id="logoutBtn">Wyloguj</button>
+                </div>
+            </div>
             <div class="date-display" id="currentDate"></div>
         </header>
 
@@ -220,7 +250,7 @@
             </div>
 
             <h2>📦 Backup & Restore</h2>
-            <p class="section-description"><a href="migrate-local.html">Scal stare dane z localStorage z chmurą</a> (jednorazowo, jeśli część wpisów nie weszła do Firebase).</p>
+            <p class="section-description">Po zalogowaniu dane są pod Twoim kontem we wszystkich urządzeniach. <a href="migrate-local.html">Narzędzie scalania</a> (backup JSON / stare localStorage).</p>
             <p class="section-description">Keep your data safe by creating regular backups.</p>
 
             <!-- Current Data Info -->

@@ -8,6 +8,8 @@ mkdir -p "$OUT"
 cp "$ROOT/index.html" \
    "$ROOT/app.js" \
    "$ROOT/bootstrap.js" \
+   "$ROOT/firebase-core.js" \
+   "$ROOT/firebase-auth.js" \
    "$ROOT/firebase-store.js" \
    "$ROOT/data-merge.js" \
    "$ROOT/styles.css" \

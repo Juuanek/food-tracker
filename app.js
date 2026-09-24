@@ -347,10 +347,13 @@ class FoodTracker {
         const infoDiv = document.getElementById('backupInfo');
         const entriesCount = this.entries.length;
         const hasProfile = this.profile ? 'Yes' : 'No';
-        const clientId = this.dataStore?.clientId;
-        const storageLine = clientId
-            ? `<div class="backup-stat">☁️ Cloud ID (to urządzenie): <code class="client-id">${clientId}</code></div>`
-            : '';
+        const email = this.dataStore?.email;
+        const uid = this.dataStore?.uid;
+        const storageLine = email
+            ? `<div class="backup-stat">👤 Konto: <strong>${email}</strong></div>`
+            : uid
+              ? `<div class="backup-stat">👤 Konto (uid): <code class="client-id">${uid}</code></div>`
+              : '';
 
         if (entriesCount > 0 || this.profile) {
             const oldestEntry = this.entries.length > 0 
