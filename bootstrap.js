@@ -78,7 +78,7 @@ async function startAppForUser(user) {
         const msg = err.message || 'Nieznany błąd połączenia.';
         if (/permission/i.test(msg)) {
             showBootError(
-                `${msg}<br><br>Zaktualizuj reguły Firestore według <strong>FIREBASE_AUTH.md</strong> (dostęp tylko dla zalogowanego <code>uid</code>).`
+                `${msg}<br><br>1) Firestore → <strong>Rules</strong> → wklej reguły z <strong>FIREBASE_AUTH.md</strong> (sekcja z <code>resource == null</code>) → <strong>Publish</strong>.<br>2) Authentication → <strong>Sign-in method</strong> → Email/Password włączone.<br>3) Odśwież stronę i zaloguj się ponownie.`
             );
             return;
         }

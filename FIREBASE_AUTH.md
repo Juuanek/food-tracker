@@ -19,21 +19,33 @@ service cloud.firestore {
       // Konto użytkownika: clients/{uid}
       allow read, write: if request.auth != null && request.auth.uid == docId;
 
-      // Stary dokument urządzenia (inne docId): odczyt + oznaczenie claimedBy
+      // Stary dokument urządzenia (inne docId niż uid)
+      // resource == null → getDoc gdy dokumentu jeszcze nie ma (bez permission denied)
       allow get: if request.auth != null
         && request.auth.uid != docId
-        && resource != null
-        && (!('claimedBy' in resource.data) || resource.data.claimedBy == null
-            || resource.data.claimedBy == request.auth.uid);
+        && (
+          resource == null
+          || !('claimedBy' in resource.data)
+          || resource.data.claimedBy == null
+          || resource.data.claimedBy == request.auth.uid
+        );
       allow update: if request.auth != null
         && request.auth.uid != docId
-        && resource.data.claimedBy == null
+        && resource != null
+        && (!('claimedBy' in resource.data) || resource.data.claimedBy == null)
         && request.resource.data.claimedBy == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimedBy']);
     }
   }
 }
 ```
+
+### Nadal „Missing or insufficient permissions”?
+
+1. **Publish** — po edycji Rules kliknij **Publish** (nie tylko zapisz w edytorze).
+2. Upewnij się, że edytujesz **Firestore Database → Rules**, nie Realtime Database.
+3. W **Authentication → Users** powinien być Twój użytkownik po rejestracji.
+4. W konsoli przeglądarki (F12 → Network lub Console) sprawdź, czy błąd jest przy `clients/{uid}` czy przy innym ID.
 
 Stare reguły `allow read, write: if true` **usuń** — inni mogliby czytać wszystkie dane.
 

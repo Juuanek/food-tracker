@@ -137,29 +137,33 @@ export async function createDataStore(uid, email = '') {
         async claimLegacyDeviceBucket() {
             if (deviceId === uid) return;
 
-            const deviceRef = doc(db, 'clients', deviceId);
-            const deviceSnap = await getDoc(deviceRef);
-            if (!deviceSnap.exists()) return;
+            try {
+                const deviceRef = doc(db, 'clients', deviceId);
+                const deviceSnap = await getDoc(deviceRef);
+                if (!deviceSnap.exists()) return;
 
-            const deviceRaw = deviceSnap.data();
-            const claimedBy = deviceRaw.claimedBy;
-            if (claimedBy && claimedBy !== uid) return;
+                const deviceRaw = deviceSnap.data();
+                const claimedBy = deviceRaw.claimedBy;
+                if (claimedBy && claimedBy !== uid) return;
 
-            const userSnap = await getDoc(docRef);
-            const userNorm = normalizeClientData(userSnap.exists() ? userSnap.data() : null);
-            const deviceNorm = normalizeClientData(deviceRaw);
-            const local = readLegacyLocalStorage();
-            let merged = mergeAppData(local || emptyAppData(), userNorm);
-            merged = mergeAppData(deviceNorm, merged);
+                const userSnap = await getDoc(docRef);
+                const userNorm = normalizeClientData(userSnap.exists() ? userSnap.data() : null);
+                const deviceNorm = normalizeClientData(deviceRaw);
+                const local = readLegacyLocalStorage();
+                let merged = mergeAppData(local || emptyAppData(), userNorm);
+                merged = mergeAppData(deviceNorm, merged);
 
-            await this.save(merged);
+                await this.save(merged);
 
-            if (!claimedBy) {
-                await setDoc(deviceRef, { claimedBy: uid }, { merge: true });
+                if (!claimedBy) {
+                    await setDoc(deviceRef, { claimedBy: uid }, { merge: true });
+                }
+
+                markMigratedFromLocalStorage();
+                localStorage.setItem(LEGACY_MERGED_KEY, '1');
+            } catch (err) {
+                console.warn('Legacy device merge skipped:', err);
             }
-
-            markMigratedFromLocalStorage();
-            localStorage.setItem(LEGACY_MERGED_KEY, '1');
         },
 
         async loadWithMigration() {
