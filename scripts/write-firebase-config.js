@@ -14,13 +14,30 @@ if (!raw) {
     process.exit(1);
 }
 
-let config;
-try {
-    config = JSON.parse(raw);
-} catch (e) {
-    console.error('FIREBASE_CONFIG_JSON nie jest poprawnym JSON');
-    process.exit(1);
+function parseFirebaseConfigEnv(input) {
+    const trimmed = input.trim();
+    try {
+        return JSON.parse(trimmed);
+    } catch {
+        // Częsty błąd: wklejka z konsoli Firebase (apiKey: "..." bez cudzysłowów na kluczach)
+        let snippet = trimmed
+            .replace(/^export\s+const\s+firebaseConfig\s*=\s*/i, '')
+            .replace(/^const\s+firebaseConfig\s*=\s*/i, '')
+            .replace(/;+\s*$/, '');
+        try {
+            return new Function(`return (${snippet})`)();
+        } catch {
+            console.error(
+                'FIREBASE_CONFIG_JSON musi być poprawnym JSON, np.:\n' +
+                    '{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}\n' +
+                    'Albo jedna linia obiektu z Firebase (apiKey: "...", bez export const).'
+            );
+            process.exit(1);
+        }
+    }
 }
+
+const config = parseFirebaseConfigEnv(raw);
 
 const required = ['apiKey', 'authDomain', 'projectId', 'appId'];
 for (const key of required) {

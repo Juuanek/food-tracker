@@ -35,10 +35,11 @@ Opcjonalnie wybierz plik **backup JSON** zamiast localStorage.
 ### 1. Sekret w GitHubie (config Firebase)
 
 1. Firebase Console → ikona Web → skopiuj obiekt `firebaseConfig`.
-2. Złóż go w **jedną linię JSON**, np.:
+2. Wklej jako **jedną linię** — albo poprawny **JSON** (klucze w cudzysłowach), albo obiekt z Firebase (`apiKey: "..."`):
    ```json
-   {"apiKey":"AIza...","authDomain":"food-tracker-xx.firebaseapp.com","projectId":"food-tracker-xx","storageBucket":"food-tracker-xx.appspot.com","messagingSenderId":"123","appId":"1:123:web:abc"}
+   {"apiKey":"AIza...","authDomain":"food-tracker-xx.firebaseapp.com","projectId":"food-tracker-xx","storageBucket":"food-tracker-xx.firebasestorage.app","messagingSenderId":"123","appId":"1:123:web:abc"}
    ```
+   **Nie działa:** `{apiKey: "..."}` w GitHubie bez poprawki skryptu — po aktualizacji `write-firebase-config.js` oba formaty są OK. Najpewniejszy nadal jest JSON jak wyżej.
 3. GitHub → repozytorium **food-tracker** → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
 4. Nazwa: `FIREBASE_CONFIG_JSON`  
    Wartość: wklej cały JSON (jedna linia).
