@@ -1,14 +1,41 @@
 // Food Tracker App
 class FoodTracker {
-    constructor() {
-        this.entries = this.loadEntries();
-        this.profile = this.loadProfile();
-        this.calorieOverrides = this.loadCalorieOverrides();
-        this.dailyActivity = this.loadDailyActivity();
+    constructor(dataStore) {
+        this.dataStore = dataStore;
+        this.entries = [];
+        this.profile = null;
+        this.calorieOverrides = {};
+        this.dailyActivity = {};
         this.editingId = null; // Track which entry is being edited
         this.currentCalendarDate = new Date(); // Track current calendar month
         this.currentModalDate = null;
-        this.init();
+        this._persistPromise = null;
+    }
+
+    async loadFromStore() {
+        const data = await this.dataStore.loadWithMigration();
+        this.entries = data.entries || [];
+        this.profile = data.profile ?? null;
+        this.calorieOverrides = data.calorieOverrides || {};
+        this.dailyActivity = data.dailyActivity || {};
+    }
+
+    async persist() {
+        if (!this.dataStore) return;
+        const payload = {
+            entries: this.entries,
+            profile: this.profile,
+            calorieOverrides: this.calorieOverrides,
+            dailyActivity: this.dailyActivity
+        };
+        this._persistPromise = this.dataStore.save(payload);
+        try {
+            await this._persistPromise;
+        } catch (err) {
+            console.error('Cloud save failed:', err);
+            this.showToast('❌ Nie zapisano w chmurze — sprawdź internet');
+            throw err;
+        }
     }
 
     init() {
@@ -25,32 +52,16 @@ class FoodTracker {
         }
     }
 
-    // Local Storage
-    loadEntries() {
-        const data = localStorage.getItem('foodEntries');
-        return data ? JSON.parse(data) : [];
-    }
-
     saveEntries() {
-        localStorage.setItem('foodEntries', JSON.stringify(this.entries));
-    }
-
-    loadProfile() {
-        const data = localStorage.getItem('userProfile');
-        return data ? JSON.parse(data) : null;
+        void this.persist();
     }
 
     saveProfile() {
-        localStorage.setItem('userProfile', JSON.stringify(this.profile));
-    }
-
-    loadCalorieOverrides() {
-        const data = localStorage.getItem('dailyCalorieOverrides');
-        return data ? JSON.parse(data) : {};
+        void this.persist();
     }
 
     saveCalorieOverrides() {
-        localStorage.setItem('dailyCalorieOverrides', JSON.stringify(this.calorieOverrides));
+        void this.persist();
     }
 
     getCalorieOverride(dateStr) {
@@ -86,13 +97,8 @@ class FoodTracker {
         this.saveCalorieOverrides();
     }
 
-    loadDailyActivity() {
-        const data = localStorage.getItem('dailyActivity');
-        return data ? JSON.parse(data) : {};
-    }
-
     saveDailyActivity() {
-        localStorage.setItem('dailyActivity', JSON.stringify(this.dailyActivity));
+        void this.persist();
     }
 
     getDayActivity(dateStr) {
@@ -341,7 +347,11 @@ class FoodTracker {
         const infoDiv = document.getElementById('backupInfo');
         const entriesCount = this.entries.length;
         const hasProfile = this.profile ? 'Yes' : 'No';
-        
+        const clientId = this.dataStore?.clientId;
+        const storageLine = clientId
+            ? `<div class="backup-stat">☁️ Cloud ID (to urządzenie): <code class="client-id">${clientId}</code></div>`
+            : '';
+
         if (entriesCount > 0 || this.profile) {
             const oldestEntry = this.entries.length > 0 
                 ? new Date(Math.min(...this.entries.map(e => new Date(e.time)))).toLocaleDateString()
@@ -353,6 +363,7 @@ class FoodTracker {
             infoDiv.innerHTML = `
                 <div class="backup-stats">
                     <h4>Current Data:</h4>
+                    ${storageLine}
                     <div class="backup-stat">📊 Total Entries: <strong>${entriesCount}</strong></div>
                     <div class="backup-stat">👤 Profile Saved: <strong>${hasProfile}</strong></div>
                     ${entriesCount > 0 ? `
@@ -361,7 +372,7 @@ class FoodTracker {
                 </div>
             `;
         } else {
-            infoDiv.innerHTML = '<div class="backup-stats"><p>No data to backup yet.</p></div>';
+            infoDiv.innerHTML = `<div class="backup-stats">${storageLine}<p>No data to backup yet.</p></div>`;
         }
     }
 
@@ -403,7 +414,7 @@ class FoodTracker {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const backupData = JSON.parse(e.target.result);
 
@@ -426,16 +437,13 @@ class FoodTracker {
                 this.calorieOverrides = backupData.calorieOverrides || {};
                 this.dailyActivity = backupData.dailyActivity || {};
 
-                // Save to localStorage
-                this.saveEntries();
-                this.saveProfile();
-                this.saveCalorieOverrides();
-                this.saveDailyActivity();
+                await this.persist();
 
                 // Update UI
                 this.loadProfileForm();
                 this.updateTodayView();
                 this.renderCalendar();
+                this.updateBackupInfo();
 
                 this.showToast('✅ Data restored successfully!');
                 
@@ -1241,7 +1249,4 @@ class FoodTracker {
         }, 3000);
     }
 }
-
-// Initialize app
-const app = new FoodTracker();
 

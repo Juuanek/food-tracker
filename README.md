@@ -44,11 +44,12 @@ A simple, mobile-first web application for tracking your daily food intake with 
 
 ## Quick Start
 
-1. Open `index.html` in your browser
-2. Set up your profile (recommended for better AI analysis)
-3. Start adding food entries
-4. View your progress in Today or Calendar view
-5. Export data to get AI nutrition insights
+1. Configure Firebase (`FIREBASE_SETUP.md`), then run a local server: `npx serve .`
+2. Open the URL shown in the terminal (not `file://`)
+3. Set up your profile (recommended for better AI analysis)
+4. Start adding food entries
+5. View your progress in Today or Calendar view
+6. Export data to get AI nutrition insights
 
 **For mobile:** Add to home screen for app-like experience
 - **iOS**: Safari → Share → Add to Home Screen
@@ -56,10 +57,12 @@ A simple, mobile-first web application for tracking your daily food intake with 
 
 ## Data Storage
 
-- **Storage**: Browser localStorage (private, stays on your device)
-- **Persistence**: Data survives restarts and app closes
-- **Backup**: Export/import feature protects against data loss
-- **Privacy**: No server, no tracking, completely offline
+- **Storage**: Google Cloud Firestore (Firebase free tier)
+- **Device ID**: Each browser gets a random Cloud ID (shown in Backup tab) until login is added
+- **Theme**: Still stored locally in the browser
+- **Backup**: Export/import JSON still works and syncs to the cloud after import
+
+**Setup**: See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) (Polish, step-by-step).
 
 **Important**: Create regular backups (weekly recommended) via the Backup & Restore tab.
 
@@ -77,7 +80,7 @@ A simple, mobile-first web application for tracking your daily food intake with 
 
 - Pure HTML/CSS/JavaScript (no framework)
 - Mobile-first responsive design
-- Works offline
+- Requires internet for saving/loading (Firestore)
 - All modern browsers supported
 
 ## Tips

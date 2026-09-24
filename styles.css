@@ -1260,3 +1260,44 @@ textarea:focus {
     }
 }
 
+/* Firebase boot loading */
+.app-loading {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 1rem;
+}
+
+.app-loading.hidden {
+    display: none;
+}
+
+.app-loading .loading-card {
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #222);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.app-loading.error .loading-card h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+}
+
+.app-loading .loading-hint {
+    font-size: 0.9rem;
+    opacity: 0.85;
+}
+
+.backup-stat code.client-id {
+    font-size: 0.75rem;
+    word-break: break-all;
+}
+
