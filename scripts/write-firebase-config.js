@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/**
- * Generuje firebase-config.js z env (używane w GitHub Actions).
- * FIREBASE_CONFIG_JSON = pełny obiekt z Firebase Console (jedna linia JSON).
- */
 const fs = require('fs');
 const path = require('path');
 
@@ -19,7 +15,6 @@ function parseFirebaseConfigEnv(input) {
     try {
         return JSON.parse(trimmed);
     } catch {
-        // Częsty błąd: wklejka z konsoli Firebase (apiKey: "..." bez cudzysłowów na kluczach)
         let snippet = trimmed
             .replace(/^export\s+const\s+firebaseConfig\s*=\s*/i, '')
             .replace(/^const\s+firebaseConfig\s*=\s*/i, '')
@@ -27,11 +22,7 @@ function parseFirebaseConfigEnv(input) {
         try {
             return new Function(`return (${snippet})`)();
         } catch {
-            console.error(
-                'FIREBASE_CONFIG_JSON musi być poprawnym JSON, np.:\n' +
-                    '{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}\n' +
-                    'Albo jedna linia obiektu z Firebase (apiKey: "...", bez export const).'
-            );
+            console.error('FIREBASE_CONFIG_JSON: invalid format');
             process.exit(1);
         }
     }

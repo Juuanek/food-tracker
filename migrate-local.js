@@ -103,7 +103,7 @@ document.getElementById('btnMerge').addEventListener('click', async () => {
         localStorage.setItem('foodTrackerMigratedToFirebase', '1');
 
         log(
-            `✅ Zapisano w Firestore (clients/${currentUid}).\n` +
+            `✅ Zapisano na koncie.\n` +
                 `Wynik: ${JSON.stringify(summarizeAppData(merged))}\n\n` +
                 `Odśwież główną aplikację (index.html).`
         );

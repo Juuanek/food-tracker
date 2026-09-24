@@ -99,7 +99,7 @@ export function markMigratedFromLocalStorage() {
 
 export async function createDataStore(uid, email = '') {
     if (!isFirebaseConfigured()) {
-        throw new Error('Firebase is not configured. Copy firebase-config.example.js to firebase-config.js and add your project keys.');
+        throw new Error('Backend not configured.');
     }
     if (!uid) {
         throw new Error('Brak zalogowanego użytkownika.');

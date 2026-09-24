@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merge localStorage → Firestore</title>
+    <title>Scalanie backupu</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         .migrate-wrap { max-width: 520px; margin: 2rem auto; padding: 1rem; }
@@ -14,15 +14,14 @@
 </head>
 <body>
     <div class="migrate-wrap">
-        <h1>🔄 Migracja danych</h1>
-        <p>Scala wpisy z <strong>localStorage</strong> (lub pliku backup JSON) z dokumentem w <strong>Firestore</strong> dla tego samego Cloud ID.</p>
-        <p>Otwórz tę stronę pod tym samym adresem co aplikacja (np. <code>localhost:3000/migrate-local.html</code>), żeby widzieć dane z tej przeglądarki.</p>
+        <h1>🔄 Scalanie danych</h1>
+        <p>Zaloguj się w głównej aplikacji, potem wróć tutaj. Możesz scalić backup JSON z danymi na koncie.</p>
 
-        <p><strong>Konto (po zalogowaniu):</strong><br><code id="clientId">…</code></p>
+        <p><strong>Konto:</strong><br><code id="clientId">…</code></p>
 
         <div class="migrate-actions">
             <button type="button" class="btn btn-primary" id="btnPreview">Podgląd scalenia</button>
-            <button type="button" class="btn btn-warning" id="btnMerge">Scal i zapisz w Firestore</button>
+            <button type="button" class="btn btn-warning" id="btnMerge">Scal i zapisz</button>
         </div>
 
         <label class="form-group">

@@ -1,6 +1,3 @@
-// Skopiuj ten plik jako firebase-config.js i wklej dane z konsoli Firebase.
-// firebase-config.js jest w .gitignore — nie commituj prawdziwych kluczy.
-
 export const firebaseConfig = {
     apiKey: 'YOUR_API_KEY',
     authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',

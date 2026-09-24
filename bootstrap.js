@@ -18,7 +18,7 @@ function showBootError(message) {
         <div class="loading-card">
             <h2>Nie można połączyć z Firebase</h2>
             <p>${message}</p>
-            <p class="loading-hint">Zobacz <strong>FIREBASE_AUTH.md</strong> i <strong>FIREBASE_SETUP.md</strong>.</p>
+            <p class="loading-hint">Sprawdź połączenie i konfigurację projektu.</p>
         </div>
     `;
 }
@@ -78,7 +78,7 @@ async function startAppForUser(user) {
         const msg = err.message || 'Nieznany błąd połączenia.';
         if (/permission/i.test(msg)) {
             showBootError(
-                `${msg}<br><br>1) Firestore → <strong>Rules</strong> → wklej reguły z <strong>FIREBASE_AUTH.md</strong> (sekcja z <code>resource == null</code>) → <strong>Publish</strong>.<br>2) Authentication → <strong>Sign-in method</strong> → Email/Password włączone.<br>3) Odśwież stronę i zaloguj się ponownie.`
+                `${msg}<br><br>Nie masz uprawnień do zapisu danych. Zaloguj się ponownie lub skontaktuj się z administratorem.`
             );
             return;
         }
@@ -139,9 +139,7 @@ function setupAuthForm() {
 
 function start() {
     if (!isFirebaseConfigured()) {
-        showBootError(
-            'Uzupełnij plik firebase-config.js (skopiuj z firebase-config.example.js i wklej dane z Firebase Console).'
-        );
+        showBootError('Brak konfiguracji backendu. Skontaktuj się z administratorem aplikacji.');
         return;
     }
 
